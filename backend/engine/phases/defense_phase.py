@@ -8,6 +8,13 @@ from backend.agents.scientist import ScientistAgent
 from backend.agents.jury import JuryAgent
 
 
+def _safe_int(v):
+    try:
+        return int(v)
+    except (ValueError, TypeError):
+        return 0
+
+
 async def run_defense_phase(
     scientist: ScientistAgent,
     players: list[AIPlayerAgent],
@@ -155,7 +162,7 @@ async def run_defense_phase(
                 if juror.agent_id not in game_state.scores:
                     game_state.scores[juror.agent_id] = {}
                 game_state.scores[juror.agent_id].update(scores)
-                juror.scores = {k: int(v) for k, v in scores.items()}
+                juror.scores = {k: _safe_int(v) for k, v in scores.items()}
 
             event_store.append(GameEvent(
                 type=EventType.JURY_SCORE_UPDATE,

@@ -397,7 +397,7 @@ function ReplayControls({
 export default function ReplayPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { events, connected, sendCommand } = useReplayWebSocket(id);
+  const { events, connected, sendCommand, clearEvents } = useReplayWebSocket(id);
 
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
@@ -444,16 +444,19 @@ export default function ReplayPage() {
   );
 
   const handleSkipToStart = useCallback(() => {
+    clearEvents();
     sendCommand("skip_to", { target: "start" });
-  }, [sendCommand]);
+  }, [sendCommand, clearEvents]);
 
   const handleSkipToEnd = useCallback(() => {
+    clearEvents();
     sendCommand("skip_to", { target: "end" });
-  }, [sendCommand]);
+  }, [sendCommand, clearEvents]);
 
   const handleStepBack = useCallback(() => {
+    clearEvents();
     sendCommand("step", { direction: "back" });
-  }, [sendCommand]);
+  }, [sendCommand, clearEvents]);
 
   const handleStepForward = useCallback(() => {
     sendCommand("step", { direction: "forward" });
@@ -461,16 +464,18 @@ export default function ReplayPage() {
 
   const handleSkipToPhase = useCallback(
     (phase: string) => {
+      clearEvents();
       sendCommand("skip_to", { target: `phase:${phase}` });
     },
-    [sendCommand]
+    [sendCommand, clearEvents]
   );
 
   const handleSkipToExtinction = useCallback(
     (n: number) => {
+      clearEvents();
       sendCommand("skip_to", { target: `extinction:${n}` });
     },
-    [sendCommand]
+    [sendCommand, clearEvents]
   );
 
   const replayControls = (

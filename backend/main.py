@@ -168,6 +168,10 @@ async def ws_game(websocket: WebSocket, game_id: str):
 async def ws_replay(websocket: WebSocket, game_id: str):
     await websocket.accept()
     store = EventStore.load_from_disk(game_id)
+    await websocket.send_json({
+        "type": "replay.metadata",
+        "data": {"total_events": len(store.events)},
+    })
     replay = ReplayBroadcaster(store.events, websocket)
     replay_task = None
     try:

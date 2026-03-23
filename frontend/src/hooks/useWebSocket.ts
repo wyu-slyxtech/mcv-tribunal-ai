@@ -44,5 +44,7 @@ export function useReplayWebSocket(gameId: string | undefined) {
     wsRef.current?.send(JSON.stringify({ command, ...params }));
   }, []);
 
-  return { events, connected, sendCommand };
+  const clearEvents = useCallback(() => setEvents([]), []);
+
+  return { events, connected, sendCommand, clearEvents };
 }

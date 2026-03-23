@@ -168,22 +168,25 @@ class GameEngine:
 
         # Compute stats and save to disk (lazy import to avoid circular dependency)
         try:
-            from backend.logs.exporter import generate_markdown, compute_stats
-            stats = compute_stats(self.event_store, self.config)
-            await self.event_store.save_to_disk(
-                config=self.config.model_dump(mode="json"),
-                stats=stats,
-                result=result,
-            )
-            generate_markdown(self.event_store, stats, self.config)
-        except ImportError:
-            # Exporter not yet available (Task 8), save without stats
-            await self.event_store.save_to_disk(
-                config=self.config.model_dump(mode="json"),
-                result=result,
-            )
-
-        self.running = False
+            try:
+                from backend.logs.exporter import generate_markdown, compute_stats
+                stats = compute_stats(self.event_store, self.config)
+                await self.event_store.save_to_disk(
+                    config=self.config.model_dump(mode="json"),
+                    stats=stats,
+                    result=result,
+                )
+                generate_markdown(self.event_store, stats, self.config)
+            except ImportError:
+                # Exporter not yet available (Task 8), save without stats
+                await self.event_store.save_to_disk(
+                    config=self.config.model_dump(mode="json"),
+                    result=result,
+                )
+        except Exception:
+            pass  # Best effort — game data may be partially saved
+        finally:
+            self.running = False
 
     def stop(self):
         """Stop the game engine."""
