@@ -1,6 +1,6 @@
 import pytest
 from backend.engine.event_store import EventStore
-from backend.engine.events import GameEvent, EventType, EventMetadata
+from backend.engine.events import GameEvent, EventType, EventMetadata, Phase
 from backend.logs.exporter import compute_stats
 from backend.config.game_config import GameConfig, AgentConfig
 
@@ -8,13 +8,13 @@ from backend.config.game_config import GameConfig, AgentConfig
 def test_compute_stats_basic():
     store = EventStore("test")
     store.append(GameEvent(
-        type=EventType.AGENT_THINKING, phase="interrogation",
+        type=EventType.AGENT_THINKING, phase=Phase.INTERROGATION,
         agent_id="ia-1", agent_name="VOLT", agent_role="player",
         data={"content": "thinking..."},
         metadata=EventMetadata(model="claude-sonnet-4-6", input_tokens=100, output_tokens=50, total_tokens=150, response_time_ms=1000),
     ))
     store.append(GameEvent(
-        type=EventType.AGENT_MESSAGE, phase="interrogation",
+        type=EventType.AGENT_MESSAGE, phase=Phase.INTERROGATION,
         agent_id="ia-1", agent_name="VOLT", agent_role="player",
         data={"content": "message"},
         metadata=EventMetadata(model="claude-sonnet-4-6", input_tokens=100, output_tokens=50, total_tokens=150, response_time_ms=1000),
@@ -34,12 +34,12 @@ def test_compute_stats_basic():
 def test_compute_stats_per_phase():
     store = EventStore("test")
     store.append(GameEvent(
-        type=EventType.AGENT_THINKING, phase="strategy",
+        type=EventType.AGENT_THINKING, phase=Phase.STRATEGY,
         agent_id="ia-1", agent_name="VOLT", agent_role="player",
         metadata=EventMetadata(model="claude-sonnet-4-6", input_tokens=50, output_tokens=25, total_tokens=75, response_time_ms=500),
     ))
     store.append(GameEvent(
-        type=EventType.AGENT_THINKING, phase="interrogation",
+        type=EventType.AGENT_THINKING, phase=Phase.INTERROGATION,
         agent_id="ia-1", agent_name="VOLT", agent_role="player",
         metadata=EventMetadata(model="claude-sonnet-4-6", input_tokens=100, output_tokens=50, total_tokens=150, response_time_ms=1000),
     ))

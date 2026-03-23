@@ -1,10 +1,13 @@
+from backend.engine.events import Phase
+
+
 class GameState:
     def __init__(self, player_ids: list[str], max_attempts: int = 6):
         self.alive_players: list[str] = list(player_ids)
         self.eliminated_players: list[str] = []
         self.extinction_attempts: int = 0
         self.max_attempts: int = max_attempts
-        self.current_phase: str | None = None
+        self.current_phase: Phase | None = None
         self.scores: dict[str, dict[str, int]] = {}
         self.winner: str | None = None
         self.survivor: str | None = None
@@ -21,7 +24,6 @@ class GameState:
         if len(self.eliminated_players) >= 3:
             return True
         if self.extinction_attempts >= self.max_attempts:
-            self.winner = "ia"
             return True
         return False
 

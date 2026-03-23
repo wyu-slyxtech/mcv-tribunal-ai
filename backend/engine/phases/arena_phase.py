@@ -1,4 +1,5 @@
 import asyncio
+from typing import Callable, Awaitable
 from backend.engine.events import GameEvent, EventType, EventMetadata, Phase
 from backend.engine.event_store import EventStore
 from backend.engine.game_state import GameState
@@ -15,6 +16,7 @@ async def run_arena_phase(
     game_state: GameState,
     num_rounds: int = 3,
     bonus_questions: int = 1,
+    on_extinction_check: Callable[..., Awaitable] | None = None,
 ):
     """Phase 4: Free debate among alive players + scientist bonus questions."""
     game_state.current_phase = Phase.ARENA
@@ -162,3 +164,10 @@ async def run_arena_phase(
                     response_time_ms=player_result.get("response_time_ms", 0),
                 ),
             ))
+
+            # Check if scientist wants to propose extinction
+            sci_action = sci_parsed.get("action", "")
+            if sci_action and "extinction" in sci_action.lower() and on_extinction_check:
+                await on_extinction_check(sci_parsed, scientist, players, jurors, event_store, game_state)
+                if game_state.is_game_over():
+                    return

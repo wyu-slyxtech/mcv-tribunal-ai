@@ -7,7 +7,8 @@ def test_extinction_attempts_limit():
     for i in range(6):
         state.extinction_attempts += 1
     assert state.is_game_over()
-    assert state.winner == "ia"
+    # winner is no longer set by is_game_over(); it's set by the game engine
+    assert state.winner is None
 
 
 def test_three_eliminations_ends_game():

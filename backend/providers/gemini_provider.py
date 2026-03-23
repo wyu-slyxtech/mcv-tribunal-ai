@@ -29,7 +29,7 @@ class GeminiProvider(BaseProvider):
             )
             full_prompt = f"{context}\nuser: {prompt}"
 
-        response = self.client.models.generate_content(
+        response = await self.client.aio.models.generate_content(
             model=self.model,
             contents=full_prompt,
             config=genai.types.GenerateContentConfig(

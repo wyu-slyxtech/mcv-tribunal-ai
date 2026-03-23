@@ -1,4 +1,5 @@
 import asyncio
+from typing import Callable, Awaitable
 from backend.engine.events import GameEvent, EventType, EventMetadata, Phase
 from backend.engine.event_store import EventStore
 from backend.engine.game_state import GameState
@@ -13,6 +14,7 @@ async def run_defense_phase(
     jurors: list[JuryAgent],
     event_store: EventStore,
     game_state: GameState,
+    on_extinction_check: Callable[..., Awaitable] | None = None,
 ):
     """Phase 3: Each alive player defends + accuses another player."""
     game_state.current_phase = Phase.DEFENSE
@@ -127,6 +129,13 @@ async def run_defense_phase(
                 response_time_ms=sci_result.get("response_time_ms", 0),
             ),
         ))
+
+        # Check if scientist wants to propose extinction
+        sci_action = sci_parsed.get("action", "")
+        if sci_action and "extinction" in sci_action.lower() and on_extinction_check:
+            await on_extinction_check(sci_parsed, scientist, players, jurors, event_store, game_state)
+            if game_state.is_game_over():
+                return
 
         # Jurors update scores after each defense
         jury_prompt = (

@@ -194,6 +194,3 @@ async def handle_extinction(
                 "votes_non": votes_non,
             },
         ))
-
-        # Check if game is over after elimination
-        game_state.is_game_over()

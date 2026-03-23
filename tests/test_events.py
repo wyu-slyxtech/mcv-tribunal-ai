@@ -1,11 +1,11 @@
 import pytest
-from backend.engine.events import GameEvent, EventType
+from backend.engine.events import GameEvent, EventType, Phase
 
 
 def test_event_creation():
     event = GameEvent(
         type=EventType.AGENT_THINKING,
-        phase="interrogation",
+        phase=Phase.INTERROGATION,
         agent_id="ia-1",
         agent_name="VOLT",
         agent_role="player",

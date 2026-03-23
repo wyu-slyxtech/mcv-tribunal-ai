@@ -18,18 +18,41 @@ class BaseAgent:
 
     async def respond(self, prompt: str, timeout: float = 60.0) -> dict:
         start = time.time()
+
+        # Attempt 1
         try:
             raw = await asyncio.wait_for(
                 self.provider.send(prompt, self.system_prompt, self.history),
                 timeout=timeout,
             )
-        except (asyncio.TimeoutError, Exception):
+        except asyncio.TimeoutError:
+            # Timeout: retry once immediately
             try:
                 raw = await asyncio.wait_for(
                     self.provider.send(prompt, self.system_prompt, self.history),
                     timeout=timeout,
                 )
             except Exception:
+                elapsed_ms = int((time.time() - start) * 1000)
+                return {
+                    "parsed": {"thought": "", "message": "..."},
+                    "input_tokens": 0, "output_tokens": 0, "response_time_ms": elapsed_ms,
+                }
+        except Exception:
+            # API error: retry up to 2 times with backoff (1s, 3s)
+            raw = None
+            backoff_delays = [1, 3]
+            for delay in backoff_delays:
+                await asyncio.sleep(delay)
+                try:
+                    raw = await asyncio.wait_for(
+                        self.provider.send(prompt, self.system_prompt, self.history),
+                        timeout=timeout,
+                    )
+                    break
+                except Exception:
+                    continue
+            if raw is None:
                 elapsed_ms = int((time.time() - start) * 1000)
                 return {
                     "parsed": {"thought": "", "message": "..."},

@@ -31,4 +31,5 @@ def test_ia_wins_attempts_exhausted():
     state = GameState(player_ids=["ia-1", "ia-2", "ia-3", "ia-4"], max_attempts=6)
     state.extinction_attempts = 6
     assert state.is_game_over()
-    assert state.winner == "ia"
+    # winner is no longer set by is_game_over(); it's set by the game engine
+    assert state.winner is None

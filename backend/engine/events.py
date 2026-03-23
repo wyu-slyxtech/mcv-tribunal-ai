@@ -46,7 +46,7 @@ class GameEvent(BaseModel):
     id: str = Field(default_factory=lambda: f"evt_{uuid.uuid4().hex[:12]}")
     type: EventType
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    phase: str | None = None
+    phase: Phase | None = None
     agent_id: str | None = None
     agent_name: str | None = None
     agent_role: str | None = None

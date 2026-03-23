@@ -18,7 +18,7 @@ class RulesConfig(BaseModel):
 
 class GameConfig(BaseModel):
     game_id: str = Field(
-        default_factory=lambda: f"game_{datetime.now(timezone.utc).strftime('%Y-%m-%d')}_{datetime.now(timezone.utc).strftime('%H%M%S')}"
+        default_factory=lambda: (lambda t=datetime.now(timezone.utc): f"game_{t.strftime('%Y-%m-%d')}_{t.strftime('%H%M%S')}")()
     )
     players: dict[str, AgentConfig]
     scientist: AgentConfig

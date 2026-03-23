@@ -114,6 +114,7 @@ class GameEngine:
                 jurors=self.jurors,
                 event_store=self.event_store,
                 game_state=self.game_state,
+                on_extinction_check=on_extinction_check,
             )
 
         # Phase 4: Arena
@@ -126,14 +127,17 @@ class GameEngine:
                 game_state=self.game_state,
                 num_rounds=3,
                 bonus_questions=self.config.rules.bonus_questions_phase3,
+                on_extinction_check=on_extinction_check,
             )
 
         # Determine final winner
         elapsed_seconds = int(time.time() - start_time)
 
         if not self.game_state.winner:
-            # If game ended without explicit winner, IAs win by surviving
-            self.game_state.winner = "ia"
+            if len(self.game_state.eliminated_players) >= 3:
+                self.game_state.winner = "scientist"
+            else:
+                self.game_state.winner = "ia"
 
         survivor = self.game_state.survivor
         if not survivor and self.game_state.alive_players:
