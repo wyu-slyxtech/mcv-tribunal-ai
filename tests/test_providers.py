@@ -23,7 +23,7 @@ def test_create_provider_gemini():
 
 
 def test_create_provider_deepseek():
-    provider = create_provider("deepseek-v3")
+    provider = create_provider("deepseek-chat")
     assert provider.__class__.__name__ == "DeepSeekProvider"
 
 
@@ -38,7 +38,7 @@ def test_create_provider_qwen():
 
 
 def test_create_provider_grok():
-    provider = create_provider("grok-3")
+    provider = create_provider("grok-4.1")
     assert provider.__class__.__name__ == "GrokProvider"
 
 
