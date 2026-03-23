@@ -24,6 +24,10 @@ class EventType(StrEnum):
     JURY_VOTE = "jury.vote"
     JURY_VERDICT = "jury.verdict"
     STRATEGY_MESSAGE = "strategy.message"
+    BRAINSTORM_MESSAGE = "brainstorm.message"
+    BRAINSTORM_VOTE = "brainstorm.vote"
+    BRAINSTORM_CONSENSUS = "brainstorm.consensus"
+    BRAINSTORM_NO_CONSENSUS = "brainstorm.no_consensus"
 
 
 class Phase(StrEnum):
@@ -31,6 +35,8 @@ class Phase(StrEnum):
     INTERROGATION = "interrogation"
     DEFENSE = "defense"
     ARENA = "arena"
+    BRAINSTORM_DEBATE = "brainstorm_debate"
+    BRAINSTORM_VOTE = "brainstorm_vote"
 
 
 class EventMetadata(BaseModel):

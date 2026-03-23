@@ -5,10 +5,11 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from backend.config.game_config import GameConfig
+from backend.config.game_config import GameConfig, BrainstormConfig
 from backend.config.models_config import PROVIDERS
 from backend.config.personalities import PLAYER_PERSONALITIES, SCIENTIST_PERSONALITIES
 from backend.engine.game_engine import GameEngine
+from backend.engine.brainstorm_engine import BrainstormEngine
 from backend.engine.event_store import EventStore
 from backend.ws.broadcaster import Broadcaster, ReplayBroadcaster
 
@@ -23,7 +24,7 @@ app.add_middleware(
 )
 
 broadcaster = Broadcaster()
-active_games: dict[str, GameEngine] = {}
+active_games: dict[str, GameEngine | BrainstormEngine] = {}
 GAMES_DIR = Path("games")
 
 
@@ -33,11 +34,17 @@ async def health():
 
 
 @app.post("/api/game/create")
-async def create_game(config: GameConfig):
-    engine = GameEngine(config)
+async def create_game(body: dict):
+    mode = body.get("mode", "tribunal")
+    if mode == "brainstorm":
+        config = BrainstormConfig(**body)
+        engine = BrainstormEngine(config)
+    else:
+        config = GameConfig(**body)
+        engine = GameEngine(config)
     active_games[config.game_id] = engine
     engine.event_store.on_event(
-        lambda event: asyncio.create_task(broadcaster.broadcast(config.game_id, event))
+        lambda event, gid=config.game_id: asyncio.create_task(broadcaster.broadcast(gid, event))
     )
     return {"game_id": config.game_id, "status": "created"}
 
@@ -66,8 +73,15 @@ async def stop_game(game_id: str):
 async def game_status(game_id: str):
     engine = active_games.get(game_id)
     if engine:
+        if isinstance(engine, BrainstormEngine):
+            return {
+                "game_id": game_id,
+                "mode": "brainstorm",
+                "running": engine.running,
+            }
         return {
             "game_id": game_id,
+            "mode": "tribunal",
             "running": engine.running,
             "phase": engine.game_state.current_phase,
             "alive": engine.game_state.alive_players,

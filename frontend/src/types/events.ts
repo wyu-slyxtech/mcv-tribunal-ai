@@ -25,6 +25,7 @@ export interface AgentConfig {
 
 export interface GameConfig {
   game_id: string;
+  mode?: string;
   players: Record<string, AgentConfig>;
   scientist: AgentConfig;
   jury: Record<string, AgentConfig>;
@@ -34,6 +35,19 @@ export interface GameConfig {
     bonus_questions_phase3: number;
     max_extinction_proposals: number;
     jury_majority: number;
+  };
+}
+
+export interface BrainstormConfig {
+  game_id: string;
+  mode: "brainstorm";
+  topic: string;
+  players: Record<string, AgentConfig>;
+  rules: {
+    debate_round_seconds: number;
+    max_rounds: number;
+    consensus_threshold: number;
+    sub_rounds_per_debate: number;
   };
 }
 

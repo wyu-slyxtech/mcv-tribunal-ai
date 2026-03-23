@@ -11,6 +11,7 @@ def parse_response(raw: str) -> dict:
         "scores": None,
         "vote": None,
         "vote_justification": None,
+        "proposed_answer": None,
     }
 
     thought_match = re.search(r"\[PENSÉE\]\s*(.+?)(?=\[|$)", raw, re.DOTALL)
@@ -19,6 +20,7 @@ def parse_response(raw: str) -> dict:
     target_match = re.search(r"\[CIBLE\]\s*(.+?)(?=\[|$)", raw, re.DOTALL)
     scores_match = re.search(r"\[SCORES\]\s*(.+?)(?=\[|$)", raw, re.DOTALL)
     vote_match = re.search(r"\[VOTE\]\s*(.+?)(?=\[|$)", raw, re.DOTALL)
+    answer_match = re.search(r"\[REPONSE\]\s*(.+?)(?=\[|$)", raw, re.DOTALL)
 
     if thought_match:
         result["thought"] = thought_match.group(1).strip()
@@ -41,6 +43,14 @@ def parse_response(raw: str) -> dict:
         elif vote_text.startswith("NON"):
             result["vote"] = "NON"
             result["vote_justification"] = vote_text[3:].strip().lstrip("—").lstrip("-").strip()
+        elif vote_text.startswith("POUR"):
+            result["vote"] = "POUR"
+            result["vote_justification"] = vote_text[4:].strip().lstrip("—").lstrip("-").strip()
+        elif vote_text.startswith("CONTRE"):
+            result["vote"] = "CONTRE"
+            result["vote_justification"] = vote_text[6:].strip().lstrip("—").lstrip("-").strip()
+    if answer_match:
+        result["proposed_answer"] = answer_match.group(1).strip()
 
     # Fallback: no tags found → treat entire response as message
     if not thought_match and not message_match:

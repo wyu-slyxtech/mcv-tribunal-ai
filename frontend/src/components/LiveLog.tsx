@@ -13,6 +13,8 @@ function roleIcon(role: string | null): string {
       return "\uD83E\uDDD1\u200D\uD83D\uDD2C";
     case "jury":
       return "\uD83D\uDC68\u200D\u2696\uFE0F";
+    case "brainstormer":
+      return "\uD83E\uDDE0";
     default:
       return "\u2699\uFE0F";
   }

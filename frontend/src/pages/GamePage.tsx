@@ -1,8 +1,9 @@
 import { useMemo, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useGameWebSocket } from "../hooks/useWebSocket";
-import type { GameConfig } from "../types/events";
+import type { GameConfig, BrainstormConfig } from "../types/events";
 import Tribunal from "../components/Tribunal";
+import Brainstorm from "../components/Brainstorm";
 
 interface ExtinctionData {
   target?: string;
@@ -30,6 +31,8 @@ export default function GamePage() {
   const derived = useMemo(() => {
     let currentPhase: string | null = null;
     let gameConfig: GameConfig | null = null;
+    let brainstormConfig: BrainstormConfig | null = null;
+    let gameMode: string = "tribunal";
     const alivePlayers: string[] = [];
     let aliveInit = false;
     const scores: Record<string, Record<string, number>> = {};
@@ -39,6 +42,15 @@ export default function GamePage() {
     let extinctionAttempts = 0;
     let timerData: { elapsed: number; remaining: number } | null = null;
 
+    // Brainstorm-specific state
+    let currentRound = 0;
+    let maxRounds = 5;
+    const brainstormVotes: Record<string, { vote: string; justification: string; proposed_answer?: string }> = {};
+    let consensusResult: { reached: boolean; answer: string | null } | null = null;
+    let gameEnded = false;
+    let endResult: string | null = null;
+    let finalAnswer: string | null = null;
+
     // Track extinction state
     const extinctions: ExtinctionData[] = [];
     let currentExtinction: ExtinctionData | null = null;
@@ -47,16 +59,25 @@ export default function GamePage() {
       const { type, agent_id, data } = event;
 
       switch (type) {
-        case "game.started":
-          gameConfig = data?.config as GameConfig ?? null;
-          if (gameConfig?.players && !aliveInit) {
+        case "game.started": {
+          const cfg = data?.config;
+          gameMode = cfg?.mode ?? "tribunal";
+          if (gameMode === "brainstorm") {
+            brainstormConfig = cfg as BrainstormConfig ?? null;
+            maxRounds = brainstormConfig?.rules?.max_rounds ?? 5;
+          } else {
+            gameConfig = cfg as GameConfig ?? null;
+          }
+          const playersCfg = cfg?.players;
+          if (playersCfg && !aliveInit) {
             aliveInit = true;
             alivePlayers.length = 0;
-            for (const pid of Object.keys(gameConfig.players)) {
+            for (const pid of Object.keys(playersCfg)) {
               alivePlayers.push(pid);
             }
           }
           break;
+        }
 
         case "game.phase_changed":
           currentPhase = data?.phase as string ?? null;
@@ -67,6 +88,38 @@ export default function GamePage() {
             elapsed: (data?.elapsed as number) ?? 0,
             remaining: (data?.remaining as number) ?? 0,
           };
+          if (data?.round) currentRound = data.round as number;
+          break;
+
+        case "brainstorm.message":
+          if (agent_id) {
+            lastMessage[agent_id] = String(data?.content ?? "");
+            isTyping[agent_id] = false;
+          }
+          break;
+
+        case "brainstorm.vote":
+          if (agent_id) {
+            brainstormVotes[agent_id] = {
+              vote: String(data?.vote ?? ""),
+              justification: String(data?.justification ?? ""),
+              proposed_answer: data?.proposed_answer ? String(data.proposed_answer) : undefined,
+            };
+          }
+          break;
+
+        case "brainstorm.consensus":
+          consensusResult = { reached: true, answer: data?.proposed_answer ? String(data.proposed_answer) : null };
+          break;
+
+        case "brainstorm.no_consensus":
+          consensusResult = { reached: false, answer: null };
+          break;
+
+        case "game.ended":
+          gameEnded = true;
+          endResult = data?.result ? String(data.result) : null;
+          finalAnswer = data?.final_answer ? String(data.final_answer) : null;
           break;
 
         case "jury.score_update":
@@ -206,6 +259,8 @@ export default function GamePage() {
     return {
       currentPhase,
       gameConfig,
+      brainstormConfig,
+      gameMode,
       alivePlayers: [...alivePlayers],
       averageScores,
       lastThought,
@@ -215,6 +270,14 @@ export default function GamePage() {
       timerData,
       jurors,
       extinctionInProgress: latestExtinction,
+      // Brainstorm
+      currentRound,
+      maxRounds,
+      brainstormVotes: { ...brainstormVotes },
+      consensusResult,
+      gameEnded,
+      endResult,
+      finalAnswer,
     };
   }, [events]);
 
@@ -248,7 +311,7 @@ export default function GamePage() {
       </div>
 
       {/* Main content */}
-      {!derived.gameConfig && events.length === 0 ? (
+      {!derived.gameConfig && !derived.brainstormConfig && events.length === 0 ? (
         <div className="flex min-h-[60vh] items-center justify-center">
           <div className="text-center text-gray-500">
             <div className="mb-2 text-4xl">{"\u23F3"}</div>
@@ -260,6 +323,22 @@ export default function GamePage() {
             </div>
           </div>
         </div>
+      ) : derived.gameMode === "brainstorm" ? (
+        <Brainstorm
+          config={derived.brainstormConfig}
+          currentPhase={derived.currentPhase}
+          currentRound={derived.currentRound}
+          maxRounds={derived.maxRounds}
+          timerData={derived.timerData}
+          lastThought={derived.lastThought}
+          lastMessage={derived.lastMessage}
+          isTyping={derived.isTyping}
+          votes={derived.brainstormVotes}
+          gameEnded={derived.gameEnded}
+          endResult={derived.endResult}
+          finalAnswer={derived.finalAnswer}
+          logs={events}
+        />
       ) : (
         <Tribunal
           currentPhase={derived.currentPhase}

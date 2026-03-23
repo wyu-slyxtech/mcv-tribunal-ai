@@ -20,7 +20,25 @@ class GameConfig(BaseModel):
     game_id: str = Field(
         default_factory=lambda: (lambda t=datetime.now(timezone.utc): f"game_{t.strftime('%Y-%m-%d')}_{t.strftime('%H%M%S')}")()
     )
+    mode: str = "tribunal"
     players: dict[str, AgentConfig]
     scientist: AgentConfig
     jury: dict[str, AgentConfig]
     rules: RulesConfig = Field(default_factory=RulesConfig)
+
+
+class BrainstormRulesConfig(BaseModel):
+    debate_round_seconds: int = 180
+    max_rounds: int = 5
+    consensus_threshold: int = 3
+    sub_rounds_per_debate: int = 3
+
+
+class BrainstormConfig(BaseModel):
+    game_id: str = Field(
+        default_factory=lambda: (lambda t=datetime.now(timezone.utc): f"brainstorm_{t.strftime('%Y-%m-%d')}_{t.strftime('%H%M%S')}")()
+    )
+    mode: str = "brainstorm"
+    topic: str
+    players: dict[str, AgentConfig]
+    rules: BrainstormRulesConfig = Field(default_factory=BrainstormRulesConfig)
