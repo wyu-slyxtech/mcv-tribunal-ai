@@ -169,19 +169,35 @@ async def ws_replay(websocket: WebSocket, game_id: str):
     await websocket.accept()
     store = EventStore.load_from_disk(game_id)
     replay = ReplayBroadcaster(store.events, websocket)
+    replay_task = None
     try:
         while True:
             msg = await websocket.receive_json()
             cmd = msg.get("command")
             if cmd == "play":
-                asyncio.create_task(replay.play())
+                if replay_task and not replay_task.done():
+                    replay_task.cancel()
+                replay_task = asyncio.create_task(replay.play())
             elif cmd == "pause":
                 replay.pause()
+                if replay_task and not replay_task.done():
+                    replay_task.cancel()
+                replay_task = None
             elif cmd == "speed":
                 replay.set_speed(msg.get("value", 1.0))
             elif cmd == "seek":
                 replay.seek(msg.get("position", 0))
             elif cmd == "skip_to":
                 replay.skip_to(msg.get("target", "phase:strategy"))
+            elif cmd == "step":
+                direction = msg.get("direction", "forward")
+                if direction == "forward" and replay.position < len(replay.events) - 1:
+                    replay.position += 1
+                    await websocket.send_json(replay.events[replay.position].model_dump(mode="json"))
+                elif direction == "back" and replay.position > 0:
+                    replay.position -= 1
+                    await websocket.send_json(replay.events[replay.position].model_dump(mode="json"))
     except WebSocketDisconnect:
         replay.pause()
+        if replay_task and not replay_task.done():
+            replay_task.cancel()

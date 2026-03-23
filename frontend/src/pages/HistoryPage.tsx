@@ -63,7 +63,7 @@ export default function HistoryPage() {
     if (result.winner === "scientist") {
       return { text: "Victoire Scientifique", icon: "\uD83C\uDFC6" };
     }
-    if (result.winner === "players") {
+    if (result.winner === "ia") {
       return { text: "Victoire des IA", icon: "\uD83E\uDD16" };
     }
     return { text: `Victoire: ${result.winner}`, icon: "\uD83C\uDFC6" };

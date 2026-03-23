@@ -66,6 +66,14 @@ class ReplayBroadcaster:
 
     def skip_to(self, target: str):
         """Skip to a phase or extinction. target format: 'phase:defense' or 'extinction:2'"""
+        if target == "start":
+            self.position = 0
+            return
+        if target == "end":
+            self.position = max(0, len(self.events) - 1)
+            return
+        if ":" not in target:
+            return
         kind, value = target.split(":", 1)
         for i, event in enumerate(self.events[self.position:], self.position):
             if kind == "phase" and event.type == "game.phase_changed" and event.phase == value:

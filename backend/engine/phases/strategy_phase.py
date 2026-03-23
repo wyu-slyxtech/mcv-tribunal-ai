@@ -11,6 +11,7 @@ async def run_strategy_phase(
     event_store: EventStore,
     game_state: GameState,
     duration_seconds: int = 300,
+    is_running: callable = None,
 ):
     """Phase 1: AI players discuss freely for a fixed duration."""
     game_state.current_phase = Phase.STRATEGY
@@ -26,6 +27,9 @@ async def run_strategy_phase(
     messages_history: list[str] = []
 
     while True:
+        if is_running and not is_running():
+            break
+
         elapsed = time.time() - start_time
         remaining = max(0, duration_seconds - elapsed)
 
@@ -81,13 +85,7 @@ async def run_strategy_phase(
                 agent_name=player.name,
                 agent_role="player",
                 data={"content": parsed.get("thought", "")},
-                metadata=EventMetadata(
-                    model=player.model,
-                    input_tokens=result.get("input_tokens", 0),
-                    output_tokens=result.get("output_tokens", 0),
-                    total_tokens=result.get("input_tokens", 0) + result.get("output_tokens", 0),
-                    response_time_ms=result.get("response_time_ms", 0),
-                ),
+                metadata=EventMetadata(),
             ))
 
             message = parsed.get("message", "")

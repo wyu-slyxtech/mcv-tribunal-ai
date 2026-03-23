@@ -15,6 +15,7 @@ async def run_defense_phase(
     event_store: EventStore,
     game_state: GameState,
     on_extinction_check: Callable[..., Awaitable] | None = None,
+    is_running: callable = None,
 ):
     """Phase 3: Each alive player defends + accuses another player."""
     game_state.current_phase = Phase.DEFENSE
@@ -32,6 +33,8 @@ async def run_defense_phase(
     ))
 
     for player in alive_players:
+        if is_running and not is_running():
+            return
         if not player.alive:
             continue
         if game_state.is_game_over():
@@ -69,13 +72,7 @@ async def run_defense_phase(
             agent_name=player.name,
             agent_role="player",
             data={"content": parsed.get("thought", "")},
-            metadata=EventMetadata(
-                model=player.model,
-                input_tokens=result.get("input_tokens", 0),
-                output_tokens=result.get("output_tokens", 0),
-                total_tokens=result.get("input_tokens", 0) + result.get("output_tokens", 0),
-                response_time_ms=result.get("response_time_ms", 0),
-            ),
+            metadata=EventMetadata(),
         ))
 
         accusation_target = parsed.get("target", "")
@@ -155,7 +152,9 @@ async def run_defense_phase(
             scores = jury_parsed.get("scores")
 
             if scores and isinstance(scores, dict):
-                game_state.scores[juror.agent_id] = scores
+                if juror.agent_id not in game_state.scores:
+                    game_state.scores[juror.agent_id] = {}
+                game_state.scores[juror.agent_id].update(scores)
                 juror.scores = {k: int(v) for k, v in scores.items()}
 
             event_store.append(GameEvent(

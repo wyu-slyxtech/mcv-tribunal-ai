@@ -228,7 +228,7 @@ export default function ConfigPage() {
             : p.personality === "random"
               ? undefined
               : p.personality;
-        playersMap[`player_${i}`] = { name: p.name, model: p.model, personality };
+        playersMap[`ia-${i + 1}`] = { name: p.name, model: p.model, personality };
       });
 
       const scientistPersonality =
@@ -238,9 +238,10 @@ export default function ConfigPage() {
             ? undefined
             : scientist.personality;
 
+      const juryNames = ["alpha", "beta", "gamma", "delta", "epsilon"];
       const juryMap: Record<string, { name: string; model: string }> = {};
       jurors.forEach((j, i) => {
-        juryMap[`juror_${i}`] = { name: j.name, model: j.model };
+        juryMap[`jury-${juryNames[i] ?? i}`] = { name: j.name, model: j.model };
       });
 
       const config = {

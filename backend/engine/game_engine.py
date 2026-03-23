@@ -82,6 +82,8 @@ class GameEngine:
                 jury_majority=self.config.rules.jury_majority,
             )
 
+        is_running = lambda: self.running
+
         # Phase 1: Strategy
         if self.running and not self.game_state.is_game_over():
             await run_strategy_phase(
@@ -89,6 +91,7 @@ class GameEngine:
                 event_store=self.event_store,
                 game_state=self.game_state,
                 duration_seconds=self.config.rules.strategy_duration_seconds,
+                is_running=is_running,
             )
 
         # Phase 2: Interrogation
@@ -101,6 +104,7 @@ class GameEngine:
                 game_state=self.game_state,
                 questions_per_ai=self.config.rules.questions_per_ai,
                 on_extinction_check=on_extinction_check,
+                is_running=is_running,
             )
 
         # Phase 3: Defense
@@ -112,6 +116,7 @@ class GameEngine:
                 event_store=self.event_store,
                 game_state=self.game_state,
                 on_extinction_check=on_extinction_check,
+                is_running=is_running,
             )
 
         # Phase 4: Arena
@@ -125,6 +130,7 @@ class GameEngine:
                 num_rounds=3,
                 bonus_questions=self.config.rules.bonus_questions_phase3,
                 on_extinction_check=on_extinction_check,
+                is_running=is_running,
             )
 
         # Determine final winner
@@ -152,6 +158,14 @@ class GameEngine:
             },
         ))
 
+        # Build result dict for persistence
+        result = {
+            "winner": self.game_state.winner,
+            "survivors": list(self.game_state.alive_players),
+            "eliminated": self.game_state.eliminated_players,
+            "extinction_attempts": self.game_state.extinction_attempts,
+        }
+
         # Compute stats and save to disk (lazy import to avoid circular dependency)
         try:
             from backend.logs.exporter import generate_markdown, compute_stats
@@ -159,12 +173,14 @@ class GameEngine:
             await self.event_store.save_to_disk(
                 config=self.config.model_dump(mode="json"),
                 stats=stats,
+                result=result,
             )
             generate_markdown(self.event_store, stats, self.config)
         except ImportError:
             # Exporter not yet available (Task 8), save without stats
             await self.event_store.save_to_disk(
                 config=self.config.model_dump(mode="json"),
+                result=result,
             )
 
         self.running = False

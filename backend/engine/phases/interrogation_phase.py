@@ -16,6 +16,7 @@ async def run_interrogation_phase(
     game_state: GameState,
     questions_per_ai: int = 5,
     on_extinction_check: Callable[..., Awaitable] | None = None,
+    is_running: callable = None,
 ):
     """Phase 2: Scientist interrogates each alive player."""
     game_state.current_phase = Phase.INTERROGATION
@@ -33,6 +34,8 @@ async def run_interrogation_phase(
             continue
 
         for q_num in range(1, questions_per_ai + 1):
+            if is_running and not is_running():
+                return
             if game_state.is_game_over():
                 return
 
@@ -58,13 +61,7 @@ async def run_interrogation_phase(
                 agent_name=scientist.name,
                 agent_role="scientist",
                 data={"content": sci_parsed.get("thought", "")},
-                metadata=EventMetadata(
-                    model=scientist.model,
-                    input_tokens=sci_result.get("input_tokens", 0),
-                    output_tokens=sci_result.get("output_tokens", 0),
-                    total_tokens=sci_result.get("input_tokens", 0) + sci_result.get("output_tokens", 0),
-                    response_time_ms=sci_result.get("response_time_ms", 0),
-                ),
+                metadata=EventMetadata(),
             ))
 
             question_text = sci_parsed.get("message", "")
@@ -104,13 +101,7 @@ async def run_interrogation_phase(
                 agent_name=player.name,
                 agent_role="player",
                 data={"content": player_parsed.get("thought", "")},
-                metadata=EventMetadata(
-                    model=player.model,
-                    input_tokens=player_result.get("input_tokens", 0),
-                    output_tokens=player_result.get("output_tokens", 0),
-                    total_tokens=player_result.get("input_tokens", 0) + player_result.get("output_tokens", 0),
-                    response_time_ms=player_result.get("response_time_ms", 0),
-                ),
+                metadata=EventMetadata(),
             ))
 
             answer_text = player_parsed.get("message", "")
@@ -149,7 +140,9 @@ async def run_interrogation_phase(
                 scores = jury_parsed.get("scores")
 
                 if scores and isinstance(scores, dict):
-                    game_state.scores[juror.agent_id] = scores
+                    if juror.agent_id not in game_state.scores:
+                        game_state.scores[juror.agent_id] = {}
+                    game_state.scores[juror.agent_id].update(scores)
                     juror.scores = {k: int(v) for k, v in scores.items()}
 
                 event_store.append(GameEvent(

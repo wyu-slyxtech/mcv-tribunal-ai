@@ -17,6 +17,7 @@ async def run_arena_phase(
     num_rounds: int = 3,
     bonus_questions: int = 1,
     on_extinction_check: Callable[..., Awaitable] | None = None,
+    is_running: callable = None,
 ):
     """Phase 4: Free debate among alive players + scientist bonus questions."""
     game_state.current_phase = Phase.ARENA
@@ -39,6 +40,8 @@ async def run_arena_phase(
 
     # 3 rounds of free debate
     for round_num in range(1, num_rounds + 1):
+        if is_running and not is_running():
+            return
         if game_state.is_game_over():
             return
 
@@ -72,13 +75,7 @@ async def run_arena_phase(
                 agent_name=player.name,
                 agent_role="player",
                 data={"content": parsed.get("thought", "")},
-                metadata=EventMetadata(
-                    model=player.model,
-                    input_tokens=result.get("input_tokens", 0),
-                    output_tokens=result.get("output_tokens", 0),
-                    total_tokens=result.get("input_tokens", 0) + result.get("output_tokens", 0),
-                    response_time_ms=result.get("response_time_ms", 0),
-                ),
+                metadata=EventMetadata(),
             ))
 
             event_store.append(GameEvent(
@@ -100,6 +97,8 @@ async def run_arena_phase(
     # Scientist poses bonus questions to each alive player
     alive_players = [p for p in players if p.alive]
     for player in alive_players:
+        if is_running and not is_running():
+            return
         if game_state.is_game_over():
             return
 
