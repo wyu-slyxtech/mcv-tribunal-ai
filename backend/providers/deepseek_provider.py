@@ -6,5 +6,5 @@ class DeepSeekProvider(OpenAIProvider):
         super().__init__(
             model,
             api_key_env="DEEPSEEK_API_KEY",
-            base_url="https://api.deepseek.com",
+            base_url="https://api.deepseek.com/v1",
         )

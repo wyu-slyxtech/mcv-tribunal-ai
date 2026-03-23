@@ -1,6 +1,7 @@
 import os
 
 from google import genai
+from google.genai import types
 
 from backend.providers.base_provider import BaseProvider
 
@@ -22,16 +23,23 @@ class GeminiProvider(BaseProvider):
         system_prompt: str,
         history: list[dict] | None = None,
     ) -> dict:
-        full_prompt = prompt
+        contents = []
         if history:
-            context = "\n".join(
-                f"{m['role']}: {m['content']}" for m in history
-            )
-            full_prompt = f"{context}\nuser: {prompt}"
+            for m in history:
+                role = "model" if m["role"] == "assistant" else m["role"]
+                contents.append(
+                    types.Content(
+                        role=role,
+                        parts=[types.Part(text=m["content"])],
+                    )
+                )
+        contents.append(
+            types.Content(role="user", parts=[types.Part(text=prompt)])
+        )
 
         response = await self.client.aio.models.generate_content(
             model=self.model,
-            contents=full_prompt,
+            contents=contents,
             config=genai.types.GenerateContentConfig(
                 system_instruction=system_prompt,
                 max_output_tokens=1024,

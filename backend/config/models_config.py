@@ -16,11 +16,11 @@ PROVIDERS = {
         "env_key": "DEEPSEEK_API_KEY",
     },
     "minimax": {
-        "models": ["minimax-01"],
+        "models": ["MiniMax-M2.5", "MiniMax-Text-01"],
         "env_key": "MINIMAX_API_KEY",
     },
     "qwen": {
-        "models": ["qwen3"],
+        "models": ["qwen3.5-plus", "qwen3-max"],
         "env_key": "QWEN_API_KEY",
     },
     "xai": {

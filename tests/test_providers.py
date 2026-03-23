@@ -28,12 +28,12 @@ def test_create_provider_deepseek():
 
 
 def test_create_provider_minimax():
-    provider = create_provider("minimax-01")
+    provider = create_provider("MiniMax-M2.5")
     assert provider.__class__.__name__ == "MiniMaxProvider"
 
 
 def test_create_provider_qwen():
-    provider = create_provider("qwen3")
+    provider = create_provider("qwen3-max")
     assert provider.__class__.__name__ == "QwenProvider"
 
 
