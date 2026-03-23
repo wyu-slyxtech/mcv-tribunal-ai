@@ -13,7 +13,7 @@ interface PlayerForm {
   customPersonality: string;
 }
 
-const DEFAULT_NAMES = ["ALPHA", "BETA", "GAMMA", "DELTA"];
+const ALL_NAMES = ["ALPHA", "BETA", "GAMMA", "DELTA", "EPSILON", "ZETA", "ETA", "THETA"];
 const BRAINSTORM_PERSONALITIES = [
   "analytique",
   "créatif",
@@ -31,13 +31,17 @@ export default function BrainstormConfigPage() {
   const [topic, setTopic] = useState("");
   const [launching, setLaunching] = useState(false);
 
+  const [numPlayers, setNumPlayers] = useState(4);
+
+  const makePlayer = (name: string): PlayerForm => ({
+    name,
+    model: "",
+    personality: "random",
+    customPersonality: "",
+  });
+
   const [players, setPlayers] = useState<PlayerForm[]>(
-    DEFAULT_NAMES.map((name) => ({
-      name,
-      model: "",
-      personality: "random",
-      customPersonality: "",
-    }))
+    ALL_NAMES.slice(0, 4).map(makePlayer)
   );
 
   const [rules, setRules] = useState({
@@ -64,6 +68,29 @@ export default function BrainstormConfigPage() {
       })
       .catch(console.error);
   }, []);
+
+  const handleNumPlayersChange = useCallback(
+    (n: number) => {
+      setNumPlayers(n);
+      setPlayers((prev) => {
+        if (n > prev.length) {
+          const extra = ALL_NAMES.slice(prev.length, n).map(makePlayer);
+          const withModels = extra.map((p) => ({
+            ...p,
+            model: allModels[0] || "",
+          }));
+          return [...prev, ...withModels];
+        }
+        return prev.slice(0, n);
+      });
+      // Ajuster le seuil de consensus si nécessaire
+      setRules((r) => ({
+        ...r,
+        consensus_threshold: Math.min(r.consensus_threshold, n),
+      }));
+    },
+    [allModels]
+  );
 
   const updatePlayer = useCallback(
     (index: number, field: keyof PlayerForm, value: string) => {
@@ -150,9 +177,29 @@ export default function BrainstormConfigPage() {
 
         {/* Players */}
         <section className="mb-8">
-          <h2 className="text-lg font-semibold mb-3 text-gray-300">
-            Les 4 IA Débattrices
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-gray-300">
+              Les {numPlayers} IA Débattrices
+            </h2>
+            <div className="flex items-center gap-3">
+              <label className="text-sm text-gray-400">Nombre :</label>
+              <div className="flex gap-1">
+                {[2, 3, 4, 5, 6, 7, 8].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => handleNumPlayersChange(n)}
+                    className={`w-8 h-8 rounded-lg text-sm font-bold transition-colors ${
+                      numPlayers === n
+                        ? "bg-purple-600 text-white"
+                        : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {players.map((player, i) => (
               <div
@@ -266,12 +313,12 @@ export default function BrainstormConfigPage() {
 
             <div className="p-4 rounded-xl bg-gray-900 border border-gray-800">
               <label className="block text-xs text-gray-500 mb-1">
-                Seuil de consensus (sur 4)
+                Seuil de consensus (sur {numPlayers})
               </label>
               <input
                 type="number"
                 min={2}
-                max={4}
+                max={numPlayers}
                 value={rules.consensus_threshold}
                 onChange={(e) =>
                   setRules((r) => ({
