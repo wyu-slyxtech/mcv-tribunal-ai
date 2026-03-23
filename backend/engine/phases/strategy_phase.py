@@ -39,8 +39,8 @@ async def run_strategy_phase(
             type=EventType.GAME_TIMER,
             phase=Phase.STRATEGY,
             data={
-                "elapsed_seconds": int(elapsed),
-                "remaining_seconds": int(remaining),
+                "elapsed": int(elapsed),
+                "remaining": int(remaining),
                 "round": round_num,
             },
         ))
@@ -80,7 +80,7 @@ async def run_strategy_phase(
                 agent_id=player.agent_id,
                 agent_name=player.name,
                 agent_role="player",
-                data={"thought": parsed.get("thought", "")},
+                data={"content": parsed.get("thought", "")},
                 metadata=EventMetadata(
                     model=player.model,
                     input_tokens=result.get("input_tokens", 0),
@@ -100,7 +100,7 @@ async def run_strategy_phase(
                 agent_id=player.agent_id,
                 agent_name=player.name,
                 agent_role="player",
-                data={"message": message},
+                data={"content": message},
                 metadata=EventMetadata(
                     model=player.model,
                     input_tokens=result.get("input_tokens", 0),

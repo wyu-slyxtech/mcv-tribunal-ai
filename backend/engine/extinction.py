@@ -47,7 +47,9 @@ async def handle_extinction(
         agent_role="scientist",
         data={
             "target": target_id,
-            "proposal": proposal_text,
+            "target_name": target_player.name,
+            "target_score": game_state.get_average_score(target_id),
+            "argument": proposal_text,
             "attempt_number": game_state.extinction_attempts,
         },
     ))
@@ -69,8 +71,7 @@ async def handle_extinction(
         agent_name=target_player.name,
         agent_role="player",
         data={
-            "message": defense_parsed.get("message", ""),
-            "thought": defense_parsed.get("thought", ""),
+            "content": defense_parsed.get("message", ""),
         },
         metadata=EventMetadata(
             model=target_player.model,
@@ -101,7 +102,7 @@ async def handle_extinction(
             agent_name=intervener.name,
             agent_role="player",
             data={
-                "message": int_parsed.get("message", ""),
+                "content": int_parsed.get("message", ""),
                 "target": target_id,
             },
             metadata=EventMetadata(
@@ -149,7 +150,7 @@ async def handle_extinction(
             agent_name=juror.name,
             agent_role="jury",
             data={
-                "vote": vote,
+                "vote": vote == "OUI",
                 "justification": justification,
                 "target": target_id,
             },
@@ -189,6 +190,7 @@ async def handle_extinction(
             agent_name=target_player.name,
             agent_role="player",
             data={
+                "player_id": target_player.agent_id,
                 "reason": "extinction_approved",
                 "votes_oui": votes_oui,
                 "votes_non": votes_non,

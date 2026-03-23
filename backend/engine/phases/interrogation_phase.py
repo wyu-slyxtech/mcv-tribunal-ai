@@ -57,7 +57,7 @@ async def run_interrogation_phase(
                 agent_id=scientist.agent_id,
                 agent_name=scientist.name,
                 agent_role="scientist",
-                data={"thought": sci_parsed.get("thought", "")},
+                data={"content": sci_parsed.get("thought", "")},
                 metadata=EventMetadata(
                     model=scientist.model,
                     input_tokens=sci_result.get("input_tokens", 0),
@@ -75,7 +75,7 @@ async def run_interrogation_phase(
                 agent_name=scientist.name,
                 agent_role="scientist",
                 data={
-                    "question": question_text,
+                    "content": question_text,
                     "target": player.agent_id,
                     "question_number": q_num,
                 },
@@ -103,7 +103,7 @@ async def run_interrogation_phase(
                 agent_id=player.agent_id,
                 agent_name=player.name,
                 agent_role="player",
-                data={"thought": player_parsed.get("thought", "")},
+                data={"content": player_parsed.get("thought", "")},
                 metadata=EventMetadata(
                     model=player.model,
                     input_tokens=player_result.get("input_tokens", 0),
@@ -120,7 +120,7 @@ async def run_interrogation_phase(
                 agent_id=player.agent_id,
                 agent_name=player.name,
                 agent_role="player",
-                data={"message": answer_text, "question_number": q_num},
+                data={"content": answer_text, "question_number": q_num},
                 metadata=EventMetadata(
                     model=player.model,
                     input_tokens=player_result.get("input_tokens", 0),

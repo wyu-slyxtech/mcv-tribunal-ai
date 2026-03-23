@@ -71,10 +71,7 @@ class GameEngine:
         self.event_store.append(GameEvent(
             type=EventType.GAME_STARTED,
             data={
-                "game_id": self.config.game_id,
-                "players": [p.agent_id for p in self.players],
-                "scientist": self.scientist.agent_id,
-                "jurors": [j.agent_id for j in self.jurors],
+                "config": self.config.model_dump(mode="json"),
             },
         ))
 

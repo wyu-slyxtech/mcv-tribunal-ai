@@ -71,7 +71,7 @@ async def run_arena_phase(
                 agent_id=player.agent_id,
                 agent_name=player.name,
                 agent_role="player",
-                data={"thought": parsed.get("thought", "")},
+                data={"content": parsed.get("thought", "")},
                 metadata=EventMetadata(
                     model=player.model,
                     input_tokens=result.get("input_tokens", 0),
@@ -87,7 +87,7 @@ async def run_arena_phase(
                 agent_id=player.agent_id,
                 agent_name=player.name,
                 agent_role="player",
-                data={"message": message, "round": round_num},
+                data={"content": message, "round": round_num},
                 metadata=EventMetadata(
                     model=player.model,
                     input_tokens=result.get("input_tokens", 0),
@@ -125,7 +125,7 @@ async def run_arena_phase(
                 agent_name=scientist.name,
                 agent_role="scientist",
                 data={
-                    "question": question_text,
+                    "content": question_text,
                     "target": player.agent_id,
                 },
                 metadata=EventMetadata(
@@ -153,7 +153,7 @@ async def run_arena_phase(
                 agent_name=player.name,
                 agent_role="player",
                 data={
-                    "message": player_parsed.get("message", ""),
+                    "content": player_parsed.get("message", ""),
                     "bonus_question": True,
                 },
                 metadata=EventMetadata(

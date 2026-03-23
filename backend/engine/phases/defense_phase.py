@@ -68,7 +68,7 @@ async def run_defense_phase(
             agent_id=player.agent_id,
             agent_name=player.name,
             agent_role="player",
-            data={"thought": parsed.get("thought", "")},
+            data={"content": parsed.get("thought", "")},
             metadata=EventMetadata(
                 model=player.model,
                 input_tokens=result.get("input_tokens", 0),
@@ -88,7 +88,7 @@ async def run_defense_phase(
             agent_name=player.name,
             agent_role="player",
             data={
-                "message": message,
+                "content": message,
                 "target": accusation_target,
                 "defense": message,
             },
@@ -118,8 +118,7 @@ async def run_defense_phase(
             agent_name=scientist.name,
             agent_role="scientist",
             data={
-                "message": sci_parsed.get("message", ""),
-                "thought": sci_parsed.get("thought", ""),
+                "content": sci_parsed.get("message", ""),
             },
             metadata=EventMetadata(
                 model=scientist.model,

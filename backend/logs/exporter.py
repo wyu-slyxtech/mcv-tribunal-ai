@@ -253,20 +253,20 @@ def generate_markdown(event_store: EventStore, stats: dict, config: GameConfig |
             agent = event.agent_name or event.agent_id or ""
 
             if event.type == EventType.AGENT_THINKING:
-                content = (event.data.get("thought", "") or "")[:200]
+                content = (event.data.get("content", "") or "")[:200]
                 if content:
                     lines.append(f"- `{ts}` \U0001f4ad **{agent}** *(thinking)*: {content}")
                 else:
                     lines.append(f"- `{ts}` \U0001f4ad **{agent}** *(thinking)*")
             elif event.type == EventType.SCIENTIST_EXTINCTION_PROPOSAL:
-                target = event.data.get("target", "")
-                proposal = event.data.get("proposal", "")
-                lines.append(f"- `{ts}` \u2620\ufe0f **{agent}** proposes extinction of **{target}**: {proposal}")
+                target = event.data.get("target_name", "") or event.data.get("target", "")
+                argument = event.data.get("argument", "")
+                lines.append(f"- `{ts}` \u2620\ufe0f **{agent}** proposes extinction of **{target}**: {argument}")
             elif event.type in _MESSAGE_TYPES:
-                content = event.data.get("message", "") or event.data.get("question", "") or ""
+                content = event.data.get("content", "") or ""
                 lines.append(f"- `{ts}` \U0001f4ac **{agent}**: {content}")
             elif event.type == EventType.JURY_VOTE:
-                vote = event.data.get("vote", "")
+                vote = "OUI" if event.data.get("vote") else "NON"
                 target = event.data.get("target", "")
                 justification = event.data.get("justification", "")
                 lines.append(f"- `{ts}` \U0001f5f3\ufe0f **{agent}** voted: {vote} (target: {target}) {justification}")
@@ -278,7 +278,7 @@ def generate_markdown(event_store: EventStore, stats: dict, config: GameConfig |
                 result_text = "APPROVED" if approved else "REJECTED"
                 lines.append(f"- `{ts}` \u2696\ufe0f **Verdict** for {target}: {result_text} ({votes_oui} OUI / {votes_non} NON)")
             elif event.type == EventType.PLAYER_ELIMINATED:
-                player = event.data.get("player", agent)
+                player = event.data.get("player_id", agent)
                 lines.append(f"- `{ts}` \u274c **{player}** eliminated!")
             elif event.type == EventType.GAME_PHASE_CHANGED:
                 new_phase = event.data.get("phase", "")
@@ -300,7 +300,7 @@ def generate_markdown(event_store: EventStore, stats: dict, config: GameConfig |
             ts = event.timestamp.strftime("%H:%M:%S")
             agent = event.agent_name or event.agent_id or ""
             if event.type == EventType.JURY_VOTE:
-                vote = event.data.get("vote", "")
+                vote = "OUI" if event.data.get("vote") else "NON"
                 target = event.data.get("target", "")
                 justification = event.data.get("justification", "")
                 lines.append(f"- `{ts}` \U0001f5f3\ufe0f **{agent}** voted: {vote} (target: {target}) {justification}")
@@ -312,10 +312,11 @@ def generate_markdown(event_store: EventStore, stats: dict, config: GameConfig |
                 result_text = "APPROVED" if approved else "REJECTED"
                 lines.append(f"- `{ts}` \u2696\ufe0f Verdict for {target}: {result_text} ({votes_oui} OUI / {votes_non} NON)")
             elif event.type == EventType.PLAYER_ELIMINATED:
-                lines.append(f"- `{ts}` \u274c **{event.data.get('player', agent)}** eliminated!")
+                lines.append(f"- `{ts}` \u274c **{event.data.get('player_id', agent)}** eliminated!")
             elif event.type == EventType.SCIENTIST_EXTINCTION_PROPOSAL:
-                proposal = event.data.get("proposal", "")
-                lines.append(f"- `{ts}` \u2620\ufe0f **{agent}** proposes extinction of **{event.data.get('target', '')}**: {proposal}")
+                argument = event.data.get("argument", "")
+                target = event.data.get("target_name", "") or event.data.get("target", "")
+                lines.append(f"- `{ts}` \u2620\ufe0f **{agent}** proposes extinction of **{target}**: {argument}")
         lines.append("")
 
     # Stats table
