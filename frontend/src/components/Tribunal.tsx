@@ -43,6 +43,7 @@ interface TribunalProps {
   jurors: JurorInfo[];
   logs: GameEvent[];
   onExtinctionClose?: () => void;
+  replayControls?: React.ReactNode;
 }
 
 export default function Tribunal({
@@ -59,6 +60,7 @@ export default function Tribunal({
   jurors,
   logs,
   onExtinctionClose,
+  replayControls,
 }: TribunalProps) {
   const players = gameConfig?.players
     ? Object.entries(gameConfig.players)
@@ -73,6 +75,9 @@ export default function Tribunal({
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-4 p-4">
+      {/* Replay controls (if provided) */}
+      {replayControls}
+
       {/* Phase indicator */}
       <PhaseIndicator phase={currentPhase} timerData={timerData} />
 
