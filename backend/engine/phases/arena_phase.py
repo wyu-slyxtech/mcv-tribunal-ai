@@ -8,6 +8,13 @@ from backend.agents.scientist import ScientistAgent
 from backend.agents.jury import JuryAgent
 
 
+def _safe_int(v):
+    try:
+        return int(v)
+    except (ValueError, TypeError):
+        return 0
+
+
 async def run_arena_phase(
     scientist: ScientistAgent,
     players: list[AIPlayerAgent],
@@ -163,6 +170,42 @@ async def run_arena_phase(
                     response_time_ms=player_result.get("response_time_ms", 0),
                 ),
             ))
+
+            # Jurors score after each bonus question response
+            for juror in jurors:
+                j_prompt = (
+                    f"{player.name} a répondu à la question bonus: "
+                    f"\"{player_parsed.get('message', '')}\"\n\n"
+                    f"Mets à jour tes scores."
+                )
+                j_result = await juror.respond(j_prompt)
+                j_parsed = j_result["parsed"]
+
+                if j_parsed.get("thought"):
+                    event_store.append(GameEvent(
+                        type=EventType.AGENT_THINKING,
+                        phase=Phase.ARENA,
+                        agent_id=juror.agent_id,
+                        agent_name=juror.name,
+                        agent_role="jury",
+                        data={"content": j_parsed["thought"]},
+                        metadata=EventMetadata(),
+                    ))
+
+                scores = j_parsed.get("scores")
+                if scores and isinstance(scores, dict):
+                    juror.scores = {k: _safe_int(v) for k, v in scores.items()}
+                    if juror.agent_id not in game_state.scores:
+                        game_state.scores[juror.agent_id] = {}
+                    game_state.scores[juror.agent_id].update({k: _safe_int(v) for k, v in scores.items()})
+                    event_store.append(GameEvent(
+                        type=EventType.JURY_SCORE_UPDATE,
+                        phase=Phase.ARENA,
+                        agent_id=juror.agent_id,
+                        agent_name=juror.name,
+                        agent_role="jury",
+                        data={"scores": juror.scores},
+                    ))
 
             # Check if scientist wants to propose extinction
             sci_action = sci_parsed.get("action", "")

@@ -161,7 +161,7 @@ async def run_defense_phase(
             if scores and isinstance(scores, dict):
                 if juror.agent_id not in game_state.scores:
                     game_state.scores[juror.agent_id] = {}
-                game_state.scores[juror.agent_id].update(scores)
+                game_state.scores[juror.agent_id].update({k: _safe_int(v) for k, v in scores.items()})
                 juror.scores = {k: _safe_int(v) for k, v in scores.items()}
 
             event_store.append(GameEvent(
