@@ -1,0 +1,13 @@
+fastapi==0.115.*
+uvicorn[standard]==0.34.*
+websockets==14.*
+pydantic==2.*
+anthropic==0.52.*
+openai==1.82.*
+google-genai==1.*
+httpx==0.28.*
+ollama==0.4.*
+aiofiles==24.*
+python-dotenv==1.*
+pytest==8.*
+pytest-asyncio==0.25.*
