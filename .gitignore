@@ -9,3 +9,4 @@ games/*
 !games/.gitkeep
 .vscode/
 .idea/
+api llm.txt
