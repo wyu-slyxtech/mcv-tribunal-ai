@@ -82,6 +82,14 @@ async def game_status(game_id: str):
 
 @app.get("/api/game/{game_id}/events")
 async def game_events(game_id: str):
+    # If the game is active in memory, return live events
+    engine = active_games.get(game_id)
+    if engine:
+        return {
+            "game_id": game_id,
+            "events": [e.model_dump(mode="json") for e in engine.event_store.events],
+        }
+    # Otherwise, read from disk
     game_dir = GAMES_DIR / game_id
     events_file = game_dir / "events.json"
     if not events_file.exists():
